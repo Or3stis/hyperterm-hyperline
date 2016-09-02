@@ -1,10 +1,48 @@
-import child_process from 'child_process'
+import {battery} from 'systeminformation'
+import {iconStyles} from '../utils/icons'
+import pluginWrapperFactory from '../core/PluginWrapper'
 
-// global system command for battery
-// is defined for each operating system.
-let cmdBattery = ''
+const pluginIcon = (React, state, fillColor) => {
+  const states = {
+    CHARGING: (
+      <svg style={iconStyles} xmlns="http://www.w3.org/2000/svg">
+        <g fillRule="evenodd">
+          <g fill={fillColor}>
+            <path d="M9,10 L10,10 L10,9 L6,9 L6,10 L7,10 L7,13 L9,13 L9,10 Z M7,1 L9,1 L9,2 L7,2 L7,1 Z M4,2 L12,2 L12,15 L4,15 L4,2 Z M5,6 L11,6 L11,7 L5,7 L5,6 Z M5,7 L11,7 L11,8 L5,8 L5,7 Z M5,8 L11,8 L11,9 L5,9 L5,8 Z M9,4 L10,4 L10,6 L9,6 L9,4 Z M6,4 L7,4 L7,6 L6,6 L6,4 Z"></path>
+          </g>
+        </g>
+      </svg>
+    ),
+    DISCHARGING: (
+      <svg style={iconStyles} xmlns="http://www.w3.org/2000/svg">
+        <g fillRule="evenodd">
+          <g fill={fillColor}>
+            <path d="M7,1 L9,1 L9,2 L7,2 L7,1 Z M4,2 L12,2 L12,15 L4,15 L4,2 Z M5,3 L11,3 L11,7 L5,7 L5,3 Z"></path>
+          </g>
+        </g>
+      </svg>
+    ),
+    CRITICAL: (
+      <svg style={iconStyles} xmlns="http://www.w3.org/2000/svg">
+        <g fillRule="evenodd">
+          <g fill={fillColor}>
+            <path d="M7,1 L9,1 L9,2 L7,2 L7,1 Z M4,2 L12,2 L12,15 L4,15 L4,2 Z M5,3 L11,3 L11,11 L5,11 L5,3 Z"></path>
+          </g>
+        </g>
+      </svg>
+    ),
+  }
 
-export function batteryFactory(React) {
+  if ( state.percent <= 20 && !state.ischarging ) {
+    return states.CRITICAL
+  } else if ( !state.ischarging ) {
+    return states.DISCHARGING
+  }
+
+  return states.CHARGING
+}
+
+export function batteryFactory(React, colors ) {
   return class extends React.Component {
     static displayName() {
       return 'Battery plugin'
@@ -12,66 +50,55 @@ export function batteryFactory(React) {
 
     static propTypes() {
       return {
-        style: React.PropTypes.object
+        options: React.PropTypes.object
       }
     }
 
-    constructor(props) {
-      super(props)
+    constructor( props ) {
+      super(props )
 
       this.state = {
-        battery: this.getBattery()
+        ischargin: false,
+        percent: '--'
       }
 
-      // Recheck every 2 minutes
-      setInterval(() => this.getBattery(), 60000 * 2)
+      this.getBatteryState()
+
+      setInterval(() => this.getBatteryState(), 1000)
     }
 
-    getBattery() {
-      if (process.platform === 'darwin') {
-        // terminal command for mac os
-        cmdBattery = 'pmset -g batt | egrep "([0-9]+\%).*" -o'
-        child_process.exec(cmdBattery, (error, stdout) => {
-          if (error) {
-            throw error
-          }
-          const batteryArray = stdout.trim().split(';')
-          let batteryLevel = `🔋 ${batteryArray[0]}`
+    getBatteryState() {
+      battery().then(data => this.setState(this.buildStateObject(data)))
+    }
 
-          this.setState({batteryLevel})
+    buildStateObject(data) {
+      return Object.assign({}, {
+        ischarging: data.ischarging,
+        percent: data.percent.toFixed()
+      })
+    }
 
-          return batteryLevel
-        })
-      } else if (process.platform === 'linux') {
-        // terminal command for linux
-        // cmdBattery = 'add linux command'
-        let batteryLevel = '🔋 😔'
+    getColor( batteryState ) {
+      const colors = this.props.options.colors
 
-        this.setState({batteryLevel})
-
-        return batteryLevel
-      } else if (process.platform === 'win32') {
-        // terminal command for windows
-        // cmdBattery = 'add windows command'
-        let batteryLevel = '🔋 😔'
-
-        this.setState({batteryLevel})
-
-        return batteryLevel
-      } else {
-        // unsupported OS
-        let batteryLevel = '🔋 😔'
-
-        this.setState({batteryLevel})
-
-        return batteryLevel
+      if ( batteryState.percent <= 20 && !batteryState.ischarging ) {
+        return colors.critical
       }
+
+      return colors.fine
     }
 
     render() {
+      const PluginWrapper = pluginWrapperFactory(React)
+      const fillColor = colors[this.getColor(this.state)]
+
       return (
-        <div style={this.props.style}>
-          {this.state.batteryLevel}
+        <div style={{
+          color: fillColor
+        }}>
+          <PluginWrapper>
+            {pluginIcon(React, this.state, fillColor)} {this.state.percent}%
+          </PluginWrapper>
         </div>
       )
     }

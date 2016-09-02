@@ -1,6 +1,6 @@
 {
   "name": "hyperline",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "Handy status line for HyperTerm",
   "keywords": [
     "hyperterm"
@@ -33,6 +33,9 @@
     "dev": "webpack --watch"
   },
   "dependencies": {
-    "color": "^0.11.3"
+    "color": "^0.11.3",
+    "json-loader": "^0.5.4",
+    "systeminformation": "^3.4.1",
+    "webpack-node-externals": "^1.3.3"
   }
 }
