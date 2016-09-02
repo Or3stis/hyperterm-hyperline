@@ -4,10 +4,7 @@ import {hostnameFactory} from './lib/plugins/hostname'
 import {memoryFactory} from './lib/plugins/memory'
 import {uptimeFactory} from './lib/plugins/uptime'
 import {cpuFactory} from './lib/plugins/cpu'
-<<<<<<< HEAD
-=======
 import {networkSpeedFactory} from './lib/plugins/network'
->>>>>>> upstream/master
 import {batteryFactory} from './lib/plugins/battery'
 
 export function mapHyperTermState(state, map) {
@@ -57,13 +54,6 @@ export function decorateHyperTerm(HyperTerm, {React}) {
         },
         {
           componentFactory: cpuFactory,
-<<<<<<< HEAD
-          color: 'transparent'
-        },
-        {
-          componentFactory: batteryFactory,
-          color: this.colors.blue
-=======
           options: {
             colors: {
               high: 'lightRed',
@@ -86,7 +76,6 @@ export function decorateHyperTerm(HyperTerm, {React}) {
               critical: 'lightRed'
             }
           }
->>>>>>> upstream/master
         }
       ]
     }
